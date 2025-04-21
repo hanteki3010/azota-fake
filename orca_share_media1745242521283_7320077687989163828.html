@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz App</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      padding: 2rem;
+    }
+
+    .question {
+      margin-bottom: 2rem;
+    }
+
+    .correct {
+      background-color: #e0ffe0 !important;
+      border-color: #a3f7bf !important;
+      color: #155724 !important;
+      font-weight: bold;
+    }
+
+    .confetti {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .confetti span {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: red;
+      animation: fall 2s linear infinite;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translateY(100vh);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1 class="mb-4">Quiz</h1>
+    <div id="quiz"></div>
+  </div>
+  <div class="confetti" id="confetti"></div>
+
+  <script>
+    const rawQuestions = `
+Câu 1: Sự khác biệt chính giữa dự án phần mềm và dự án xây dựng là gì?
+A. Quy mô dự án
+B. Đội ngũ tham gia
+C. Ngân sách thực hiện
+*D. Tính linh hoạt và khả năng thay đổi yêu cầu
+
+Câu 2: Project Manager có vai trò gì trong dự án phần mềm?
+A. Phân tích yêu cầu khách hàng
+B. Phát triển phần mềm
+C. Thực hiện kiểm thử phần mềm
+*D. Lãnh đạo và quản lý dự án
+
+Câu 3: Vai trò nào dưới đây không phải là bên liên quan trong dự án phần mềm?
+A. Developer
+B. Stakeholder
+C. Tester
+*D. Controller
+
+Câu 4: Quản lý dự án phần mềm là việc thực hiện các hoạt động nào?
+*A. Tổ chức, lập kế hoạch, và kiểm soát dự án
+B. Quản lý khách hàng
+C. Phát triển mã nguồn
+D. Thiết kế giao diện người dùng
+
+Câu 5: Trong quản lý dự án phần mềm, ai là người chịu trách nhiệm cuối cùng trong việc xác định và phê duyệt các yêu cầu của dự án?
+*A. Stakeholder
+B. Designer
+C. Developer
+D. Tester
+
+Câu 6: Vì sao vai trò của Stakeholder quan trọng trong quản lý dự án phần mềm?
+A. Họ kiểm tra mã nguồn đảm bảo phần mềm hoạt động đúng
+*B. Họ đưa ra yêu cầu và phản hồi để dự án đáp ứng nhu cầu
+C. Họ thiết kế dự án theo đúng yêu cầu
+D. Họ phát triển sản phẩm đầy đủ chức năng
+
+Câu 7: Developer có vai trò gì trong quy trình quản lý dự án phần mềm?
+A. Xây dựng yêu cầu khách hàng
+B. Giám sát tiến độ dự án
+C. Quản lý ngân sách dự án
+*D. Thực hiện phát triển và triển khai mã nguồn
+
+Câu 8: Giai đoạn nào tập trung vào việc hiểu yêu cầu của khách hàng?
+A. Thiết kế
+*B. Phân tích yêu cầu
+C. Phát triển
+D. Kiểm thử
+
+Câu 9: Giai đoạn nào trong vòng đời dự án giúp đảm bảo chất lượng phần mềm?
+A. Phát triển
+*B. Kiểm thử
+C. Lập kế hoạch
+D. Thiết kế
+
+Câu 10: Mục đích của giai đoạn Bảo trì là gì?
+A. Tạo ra mã nguồn
+*B. Cập nhật và sửa lỗi sau khi triển khai
+C. Kiểm tra việc đáp ứng tính năng
+D.  Phát triển sản phẩm
+
+Câu 11: Tại sao giai đoạn lập kế hoạch lại quan trọng trong vòng đời dự án phần mềm?
+A. Giúp xác định ngân sách
+*B. Giúp xác định mục tiêu và lịch trình
+C. Giúp tạo giao diện người dùng
+D. Giúp phát triển mã nguồn
+
+Câu 12: Mục tiêu chính của giai đoạn thiết kế là gì?
+A. Tạo ra mã nguồn cho phần mềm
+*B. Xây dựng cấu trúc và giải pháp kỹ thuật
+C. Kiểm thử phần mềm
+D. Triển khai sản phẩm
+
+Câu 13: Tại sao giai đoạn kiểm thử lại cần thiết trong phát triển phần mềm?
+A. Đảm bảo phân tích đúng yêu cầu
+B. Đảm bảo xây dựng giao diện người dùng 
+C. Đảm bảo ngân sách phù hợp
+*D. Đảm bảo chất lượng sản phẩm
+
+Câu 14: Mục đích chính của giai đoạn bảo trì là gì?
+*A. Đảm bảo phần mềm hoạt động ổn định và được cập nhật
+B. Xác định yêu cầu mới
+C. Kiểm thử sản phẩm trước khi đưa vào hoạt động
+D. Phát triển sản phẩm mới
+
+Câu 15: Điều gì xảy ra nếu giai đoạn phân tích yêu cầu không được thực hiện đúng?
+A. Không có dự trù ngân sách hợp lý
+*B. Phần mềm không đáp ứng nhu cầu của người dùng
+C. Phần mềm có thể xuất hiện nhiều lỗi hơn
+D. Giao diện phần mềm thiếu sự thu hút
+
+Câu 16: Ai chịu trách nhiệm chính trong việc lãnh đạo và giám sát dự án phần mềm?
+A. Developer
+*B.Project Manager
+C.Tester
+D.Stakeholder
+
+Câu 17: Ai chịu trách nhiệm đưa ra phản hồi và yêu cầu thay đổi cho dự án?
+*A. Stakeholder
+B. Project Manager
+C. Developer
+D. Tester
+
+Câu 18: Tại sao quản lý dự án phần mềm lại khác với quản lý dự án xây dựng?
+A. Quản lý dự án xây dựng không cần thay đổi
+*B. Quản lý dự án phần mềm cần tính linh hoạt cao hơn
+C. Các dự án phần mềm luôn lớn hơn dự án xây dựng
+D. Quản lý dự án phần mềm có thời gian ngắn hơn
+
+Câu 19: Giai đoạn phát triển có vai trò gì?
+A. Lập kế hoạch ngân sách
+B. Phân tích yêu cầu
+C. Kiểm thử phần mềm
+*D. Viết và triển khai mã nguồn
+
+Câu 20: Vai trò của giai đoạn kiểm thử trong vòng đời dự án phần mềm là gì?
+A. Xây dựng tính năng của phần mềm
+B. Viết mã nguồn cho ứng dụng
+*C. Đảm bảo sản phẩm đáp ứng yêu cầu đề ra
+D. Lên kế hoạch ngân sách dự án phần mềm
+
+Câu 21: Lợi ích của việc có giai đoạn bảo trì trong quản lý dự án phần mềm là gì?
+A. Giảm thiểu chi phí duy trì hệ thống
+*B. Đảm bảo hiệu quả và phù hợp với nhu cầu người dùng
+C. Bổ sung và phát triển các tính năng mới
+D. Hỗ trợ trong việc quản lý và vận hành nhóm
+
+Câu 22: Dự án phần mềm thường có đặc điểm nào? 
+A. Quy mô nhỏ hơn các dự án khác
+*B. Khả năng thay đổi yêu cầu linh hoạt
+C. Ngân sách thấp hơn các dự án xây dựng
+D. Được thực hiện bởi một cá nhân
+
+Câu 23: Giai đoạn Phân tích yêu cầu giúp ích gì cho đội ngũ phát triển? 
+A. Phát triển mã nguồn
+B. Kiểm tra sản phẩm
+*C. Hiểu rõ nhu cầu của khách hàng
+D. Thiết kế giao diện
+
+Câu 24: Vai trò của Tester là gì trong dự án phần mềm?
+A. Quản lý dự án
+B. Phân tích yêu cầu
+C. Phát triển phần mềm
+*D. Kiểm tra và đảm bảo chất lượng sản phẩm
+
+Câu 25: Project Manager cần làm gì để đảm bảo dự án đạt được mục tiêu?
+*A. Lập kế hoạch, giám sát và điều chỉnh dự án theo nhu cầu
+B. Thiết kế giao diện người dùng theo đúng mô tả
+C. Tạo ra mã nguồn chất lượng cao nhất có thể
+D. Kiểm thử phần mềm liên tục để đảm bảo mục tiêu đề ra
+
+Câu 26: Giai đoạn đầu tiên trong vòng đời dự án phần mềm là gì?
+A. Phát triển
+*B. Lập kế hoạch
+C. Kiểm thử
+D. Bảo trì
+
+Câu 27: Quản lý dự án phần mềm là gì?
+A. Hệ thống phần mềm dùng để quản lý các bên liên quan
+*B. Quá trình tổ chức và kiểm soát một dự án để đạt mục tiêu
+C. Quá trình tạo ra mã nguồn phần mềm
+D. Quy trình thiết kế giao diện người dùng
+
+Câu 28: Ai là người chịu trách nhiệm chính trong việc phát triển mã nguồn?
+*A. Developer
+B. Tester
+C. Project Manager
+D. Stakeholder
+
+Câu 29: Giai đoạn nào cung cấp sản phẩm cho người dùng cuối?
+*A. Triển khai
+B. Phân tích yêu cầu
+C. Thiết kế
+D. Phát triển
+
+Câu 30: Giai đoạn triển khai yêu cầu những hoạt động nào?
+*A. Đưa phần mềm vào sử dụng thực tế
+B. Phát triển mã nguồn
+C. Kiểm tra lỗi
+D. Phân tích yêu cầu
+
+Câu 1: Phương pháp Waterfall trong quản lý dự án là gì?
+A. Phương pháp xoay vòng
+B. Phương pháp ưu tiên khách hàng
+*C. Phương pháp tuần tự với các giai đoạn cố định
+D. Phương pháp lặp đi lặp lại
+
+Câu 2: Agile thường áp dụng trong môi trường dự án nào?
+A. Môi trường cố định yêu cầu
+B. Môi trường nhỏ lẻ
+*C. Môi trường yêu cầu thay đổi nhanh chóng
+D. Môi trường không cần kiểm thử
+
+Câu 3: Tại sao Agile được đánh giá cao trong các dự án phần mềm?
+A. Do có chi phí phát triển thấp
+B. Do yêu cầu ít tài nguyên trong quá trình phát triển
+C. Vì không đòi hỏi giai đoạn thử nghiệm sản phẩm
+*D. Vì có tính linh hoạt và phản ứng nhanh với thay đổi
+
+Câu 4: Điểm khác biệt giữa Agile và Waterfall là gì?
+A. Waterfall có tốc độ nhanh hơn so với Agile
+B. Agile không có giai đoạn kiểm thử sản phẩm
+C. Agile không cần đến sự tham gia của khách hàng
+*D. Agile linh hoạt, cho phép thay đổi trong khi Waterfall tuân thủ quy trình cố định
+
+Câu 5: Khi nào nên chọn phương pháp Scrum thay vì Waterfall?
+A. Khi đội ngũ thực hiện có ít kinh nghiệm
+*B. Khi dự án yêu cầu thay đổi liên tục và tính linh hoạt cao
+C. Khi yêu cầu dự án không thay đổi trong quá trình phát triển
+D. Khi ngân sách dành cho dự án khá hạn chế
+
+Câu 6: Agile thường phù hợp với loại dự án nào?
+A. Dự án không yêu cầu thực hiện kiểm thử
+B. Dự án có các yêu cầu không thay đổi
+*C. Dự án đòi hỏi linh hoạt và phản ứng nhanh với thay đổi
+D. Dự án áp dụng quy trình tuần tự, cố định
+
+Câu 7: Tại sao Scrum lại thích hợp với các nhóm nhỏ?
+A. Vì phương pháp này giúp tiết kiệm chi phí trong dự án
+B. Vì Scrum không yêu cầu thực hiện kiểm thử phần mềm
+C. Vì Scrum không cần có kế hoạch chi tiết
+*D. Vì quy trình nhanh và yêu cầu giao tiếp thường xuyên giữa các thành viên
+
+Câu 8: Khi nào nên sử dụng phương pháp Waterfall?
+*A. Khi yêu cầu và quy trình đã được xác định rõ ràng
+B. Khi yêu cầu có khả năng thay đổi nhiều
+C. Khi không có ngân sách lớn
+D. Khi dự án cần tính linh hoạt cao
+
+Câu 9: Khi nào Lean sẽ là phương pháp thích hợp nhất?
+A. Khi dự án cần hoàn thành nhanh chóng
+*B. Khi muốn giảm thiểu lãng phí và tối ưu hóa quy trình
+C. Khi yêu cầu khách hàng thay đổi liên tục
+D. Khi không có sự tham gia của khách hàng
+
+Câu 10: Scrum phù hợp nhất với loại dự án nào?
+A. Dự án không có giai đoạn kiểm thử cụ thể
+*B. Dự án yêu cầu tính linh hoạt, nhóm nhỏ
+C. Dự án có yêu cầu và kế hoạch cố định
+D. Dự án với quy mô lớn và phức tạp
+
+Câu 11: Trong trường hợp yêu cầu thay đổi thường xuyên, tại sao Agile là lựa chọn hợp lý?
+*A. Agile linh hoạt, dễ dàng thích ứng thay đổi
+B. Agile giúp giảm thiểu ngân sách dự án
+C. Agile ít yêu cầu về nguồn lực dự án
+D. Agile có quy trình thực hiện dễ hiểu
+
+Câu 12: Tại sao Scrum phù hợp cho các dự án cần phản hồi nhanh?
+*A. Scrum có các chu kỳ ngắn giúp điều chỉnh linh hoạt theo phản hồi
+B. Scrum có ngân sách thấp nên phù hợp dự án cần phản hồi nhanh
+C. Scrum có quy trình tuần tự phù hợp với các dự án lớn
+D. Scrum dễ dàng triển khai trong các nhóm dự án
+
+Câu 13: Dự án với các giai đoạn cụ thể và yêu cầu cố định nên áp dụng phương pháp nào?
+A. Lean
+*B. Waterfall
+C. Scrum
+D. Agile
+
+Câu 14: Trong tình huống nào Scrum sẽ là lựa chọn lý tưởng?
+A. Khi không cần kiểm thử
+B. Khi dự án có yêu cầu cố định
+*C. Khi dự án cần sự hợp tác và phản hồi liên tục
+D. Khi ngân sách hạn chế
+
+Câu 15: Tại sao Lean là lựa chọn phù hợp cho các dự án yêu cầu hiệu quả cao?
+A. Lean có quy trình phức tạp
+B. Lean cần nhiều thời gian
+*C. Lean tối ưu hóa quy trình và giảm thiểu lãng phí
+D. Lean yêu cầu ít nguồn lực
+
+Câu 16: Phương pháp nào nổi tiếng với việc tập trung vào tính linh hoạt và khả năng thay đổi?
+A. Scrum
+B. Waterfall
+C. Lean
+*D. Agile
+
+Câu 17: Vì sao phương pháp Waterfall không phù hợp cho các dự án có yêu cầu thay đổi thường xuyên?
+*A. Phương pháp này tuân thủ quy trình tuần tự, khó thay đổi khi đã hoàn thành một giai đoạn
+B. Phương pháp này yêu cầu nhiều tài nguyên
+C. Waterfall không phù hợp với các nhóm lớn
+D. Phương pháp này phức tạp và khó quản lý
+
+Câu 18: Điều gì làm cho phương pháp Lean trở nên hiệu quả trong quản lý dự án?
+A. Cho phép thay đổi yêu cầu liên tục
+B. Tăng tốc độ hoàn thành sản phẩm
+C. Không cần sự tham gia của khách hàng
+*D. Loại bỏ các bước không cần thiết để giảm lãng phí
+
+Câu 19: Mục tiêu chính của Lean trong quản lý dự án là gì?
+A. Tăng tốc độ phát triển
+*B. Tối ưu hóa quy trình và loại bỏ lãng phí
+C. Giảm thời gian quản lý dự án
+D. Đảm bảo chất lượng sản phẩm cao nhất
+
+Câu 20: Trong tình huống nào Agile sẽ hiệu quả nhất?
+A. Khi yêu cầu của dự án được giữ nguyên
+B. Khi ngân sách thực hiện bị hạn chế
+C. Khi dự án có quy mô nhỏ gọn
+*D. Khi yêu cầu thay đổi liên tục và phản hồi nhanh
+
+Câu 21: Trong một dự án với yêu cầu rõ ràng, không có nhiều thay đổi, phương pháp quản lý dự án nào phù hợp nhất?
+A. Agile
+B. Lean
+C. Scrum
+*D. Waterfall
+
+Câu 22: Mô hình Lean phù hợp để áp dụng trong tình huống nào sau đây?
+A. Khi dự án có các yêu cầu cố định và ít thay đổi
+B. Khi không cần thực hiện kiểm thử trong dự án
+C. Khi không cần tập trung vào việc tối ưu hóa giá trị cho khách hàng
+*D. Khi yêu cầu của khách hàng thường xuyên thay đổi và cần sự linh hoạt
+
+Câu 23: Nếu dự án đòi hỏi sự linh hoạt cao, tại sao nên tránh sử dụng Waterfall?
+A. Waterfall yêu cầu thời gian ngắn để hoàn thành từng giai đoạn
+B. Waterfall thiếu các giai đoạn thử nghiệm linh hoạt
+*C. Waterfall không cho phép thay đổi dễ dàng khi đã hoàn thành các giai đoạn
+D. Waterfall yêu cầu ngân sách lớn để triển khai
+
+Câu 24: Trong dự án cần phát triển nhanh và phản hồi liên tục, tại sao Scrum là lựa chọn tốt?
+A. Scrum yêu cầu ít tài nguyên để quản lý dự án
+B. Scrum không yêu cầu quy trình rõ ràng và có thể linh hoạt điều chỉnh
+*C. Scrum sử dụng các sprints ngắn để có thể điều chỉnh thường xuyên theo phản hồi
+D. Scrum có chi phí thấp giúp tiết kiệm ngân sách dự án
+
+Câu 25: Phương pháp Lean trong quản lý dự án chủ yếu nhấn mạnh điều gì?
+*A. Giảm thiểu lãng phí và tối ưu hóa quy trình
+B. Đảm bảo sản phẩm có chất lượng cao nhất
+C. Tăng cường tốc độ phát triển
+D. Thời gian thực hiện nhanh nhất
+
+Câu 26: Điều gì làm cho Agile thích hợp cho các dự án phần mềm phức tạp?
+A. Quy trình tuần tự trong việc phát triển và triển khai
+*B. Tính linh hoạt và khả năng thích ứng với những thay đổi liên tục
+C. Thời gian ngắn để hoàn thành các chu kỳ phát triển
+D. Chi phí thấp giúp tiết kiệm nguồn lực dự án
+
+Câu 27: Phương pháp nào sử dụng các chu kỳ ngắn gọi là sprints?
+A.XP (Extreme Programming)
+*B.Scrum
+C.Waterfall
+D.Lean
+
+Câu 28: So với Agile, Lean có điểm nhấn mạnh gì khác biệt?
+A. Tập trung vào khách hàng
+B. Phát triển sản phẩm tốt hơn
+*C. Giảm thiểu lãng phí và tối ưu hóa quy trình
+D. Tăng tốc độ phát triển
+
+Câu 29: Điểm đặc trưng của Scrum là gì?
+A. Chỉ áp dụng cho các nhóm có quy mô nhỏ
+*B. Chu kỳ ngắn và tập trung vào sự linh hoạt cao
+C. Không cần tiến hành giai đoạn kiểm thử
+D. Sử dụng quy trình thực hiện tuần tự
+
+Câu 30: Phương pháp nào là tốt nhất cho một dự án có quy trình cố định?
+A. Scrum
+B. Agile
+C. Lean
+*D. Waterfall
+
+Câu 1:Công cụ nào thường được sử dụng để hỗ trợ phân tích yêu cầu?
+A. Báo cáo KPI
+B. Trello
+*C. Bảng phân tích nhiệm vụ
+D. Gantt chart
+
+Câu 2: Tại sao việc phân chia yêu cầu thành nhiệm vụ nhỏ lại quan trọng?
+A. Để tiết kiệm chi phí dự án
+B. Để giảm số lượng công việc của nhóm
+C. Để đảm bảo không có rủi ro trong dự án
+*D. Để giúp quản lý công việc dễ dàng hơn
+
+Câu 3: Một nhiệm vụ tốt thường có đặc điểm gì?
+A. Phức tạp và chi tiết
+*B. Cụ thể, rõ ràng và khả thi
+C. Đơn giản và không có ưu tiên
+D. Dài hạn và khó thay đổi
+
+Câu 4: Công cụ nào hỗ trợ minh họa thời gian thực hiện từng nhiệm vụ?
+*A. Gantt chart
+B. Ma trận rủi ro
+C. PERT chart
+D. Trello
+
+Câu 5: Một Gantt chart điển hình bao gồm các thành phần nào?
+A. Ngân sách và kế hoạch kiểm tra
+*B. Nhiệm vụ và thời gian thực hiện
+C. Thời gian thực hiện và ngân sách
+D. Nhiệm vụ và biểu đồ rủi ro
+
+Câu 6: Mục tiêu chính của biểu đồ PERT là gì?
+*A. Lập kế hoạch và kiểm soát tiến độ dự án
+B. Tạo báo cáo tài chính cho dự án
+C. Đo lường hiệu quả làm việc của nhân viên
+D. Quản lý rủi ro tài chính của dự án
+
+Câu 7: Tại sao các nhiệm vụ phụ thuộc lẫn nhau cần được quản lý chặt chẽ?
+*A. Để đảm bảo tiến độ đúng hạn
+B. Để tạo ấn tượng tốt với các bên liên quan
+C. Để tiết kiệm nguồn lực cho dự án
+D. Để tiết kiệm chi phí dự án
+
+Câu 8: Ngân sách dự án thường được điều chỉnh khi nào?
+A. Khi không đủ nguồn lực
+B. Khi thay đổi yêu cầu
+C. Khi gặp rủi ro không lường trước
+*D. Cả ba yếu tố trên
+
+Câu 9: Thành phần nào sau đây không thuộc ngân sách dự án?
+A. Chi phí công cụ hỗ trợ
+*B.  Phân tích KPIs
+C.  Chi phí dự phòng
+D. Chi phí nhân sự
+
+Câu 10: Khi nào biểu đồ Gantt không phù hợp?
+A. Khi dự án yêu cầu theo dõi tiến độ chi tiết và chính xác từng nhiệm vụ
+B. Khi dự án có quy mô nhỏ và đơn giản, với ít nhiệm vụ và ít sự phụ thuộc
+*C. Khi có nhiều nhiệm vụ có mối quan hệ phức tạp, phụ thuộc lẫn nhau
+D. Khi dự án yêu cầu sự linh hoạt và thay đổi liên tục trong quá trình thực hiện
+E.Khi dự án có tiến độ được lên kế hoạch rõ ràng và gần như không thay đổi
+
+Câu 11: Tại sao việc dự toán ngân sách chính xác lại quan trọng?
+*A. Để tránh vượt ngân sách và đảm bảo nguồn lực hợp lý
+B. Để giảm bớt rủi ro kỹ thuật
+C. Để giảm thiểu thời gian thực hiện dự án và các vấn đề phát sinh không cần thiết
+D. Để tối ưu hóa các công cụ hỗ trợ
+
+Câu 12: Biểu đồ PERT thường dùng để làm gì? 
+A. Tạo các báo cáo liên quan đến tài chính, nguồn lực, rủi ro cho dự án 
+*B. Quản lý thời gian và trình tự các công việc trong dự án
+C. Đánh giá chất lượng sản phẩm trong dự án 
+D. Giúp tối ưu hóa chi phí, nhân sự, rủi ro trong quá trình quản lý dự án
+
+Câu 13: Yếu tố nào quyết định việc điều chỉnh ngân sách?
+A. Sự đồng thuận của các bên liên quan
+B.  Thời gian hoàn thành dự án
+C. Hiệu suất nhóm dự án
+*D.  Các thay đổi về yêu cầu và nguồn lực
+
+Câu 14: Lợi ích của việc phân bổ ngân sách hợp lý là gì? 
+A. Duy trì tiến độ dự án hợp lý
+B. Giảm thiểu rủi ro và quản lý chi phí vượt mức
+*C. Đảm bảo các hạng mục quan trọng được ưu tiên và chi tiêu hợp lý
+D. Đảm bảo ngân sách đủ cho tất cả các nhiệm vụ dù không quan trọng
+
+Câu 15: Điều gì có thể xảy ra nếu ngân sách dự án không được phân bổ đúng cách?
+A. Tất cả các nhiệm vụ trong dự án sẽ được hoàn thành mà không gặp vấn đề gì
+*B. Các hạng mục quan trọng có thể thiếu kinh phí, dẫn đến chậm tiến độ hoặc giảm chất lượng
+C. Dự án có khả năng hoàn thành nhanh hơn vì tiết kiệm được nhiều khoản chi phí không cần thiết
+D. Tăng mức độ hài lòng của các bên liên quan nhờ vào cách chi tiêu linh hoạt và hợp lý hơn
+
+Câu 16: Phân chia yêu cầu phần mềm thành các nhiệm vụ nhỏ giúp ích như thế nào trong quản lý dự án phần mềm?
+A. Giảm số lượng nhân viên tham gia dự án
+*B. Phát hiện lỗi dễ dàng hơn
+C. Loại bỏ hoàn toàn các rủi ro trong dự án
+D. Giảm sự tham gia của các bên liên quan
+
+Câu 17: Khi nào nên cập nhật danh sách nhiệm vụ đã phân chia?
+A. Khi hoàn thành dự án
+B. Khi nhóm bắt đầu triển khai dự án
+*C. Khi yêu cầu dự án thay đổi
+D. Khi dự toán ngân sách được phê duyệt
+
+Câu 18: Biểu đồ PERT dựa trên điều gì để ước tính thời gian?
+A. Kinh nghiệm quản lý trước đó và các yếu tố lịch sử trong các dự án tương tự
+B. Đánh giá tổng thể các yếu tố trong dự án để ước tính thời gian hoàn thành
+*C. Ba giá trị thời gian (lạc quan, bi quan, trung bình)
+D. Ngân sách phân bổ cho dự án và các yếu tố tài chính khác
+
+Câu 19: Một dự án thường sử dụng Gantt chart khi nào?
+A. Giải quyết xung đột nhóm
+B. Phân tích ngân sách
+*C. Lập kế hoạch và theo dõi tiến độ
+D. Đánh giá chất lượng sản phẩm
+
+Câu 20: PERT chart khác Gantt chart ở điểm nào?
+A. Biểu đồ PERT là biểu đồ cột, biểu đồ Gantt chart là biểu đồ mạng
+B. PERT chart dựa trên thời gian, Gantt chart không dựa trên thời gian
+C. Gantt chart không thể hiện mối quan hệ phụ thuộc
+*D. Biểu đồ PERT là biểu đồ mạng, Biểu đồ Gantt là biểu đồ cột
+
+Câu 21: Công cụ nào hữu ích nhất khi điều chỉnh ngân sách dự án?
+A. Biểu đồ PERT
+*B. Báo cáo tài chính dự án
+C. Báo cáo tiến độ
+D. Gantt chart
+
+Câu 22: Làm thế nào để xác định ngân sách phù hợp?
+A.  Dựa trên phân tích rủi ro
+*B. Phân tích yêu cầu và nguồn lực cần thiết
+C. Tính toán dựa trên ngân sách cũ
+D. Tính toán dựa trên thời gian thực hiện
+
+Câu 23: Tại sao việc điều chỉnh ngân sách lại cần thiết trong một số dự án?
+A. Để đảm bảo dự án có đủ nguồn lực và thích ứng với các thay đổi yêu cầu
+B. Để xử lý các rủi ro không lường trước và các chi phí phát sinh
+C. Để cân đối tài chính khi tiến độ và phạm vi dự án bị ảnh hưởng
+*D. Tất cả các lý do trên
+
+Câu 24: Việc điều chỉnh ngân sách có thể giúp gì cho dự án?
+A.  Tăng số lượng nhân viên cần thiết cho dự án
+B. Giảm số lượng nhân viên cần thiết cho dự án
+C. Cải thiện các yếu tố về chất lượng, tính năng, và hiệu quả của sản phẩm 
+*D. Đảm bảo dự án vẫn có đủ nguồn lực khi xảy ra thay đổi
+
+Câu 25: Khi chia nhỏ yêu cầu, điều gì cần ưu tiên?
+A. Ngân sách dự án
+*B. Tính khả thi của nhiệm vụ
+C. Thời gian triển khai dự án
+D. Mức độ phức tạp của nhiệm vụ
+
+Câu 26: Một Gantt chart hiển thị thông tin nào?
+*A. Tiến độ và thời gian thực hiện từng nhiệm vụ
+B. Ngân sách và các khoản chi phí dự kiến cho từng giai đoạn của dự án
+C. Phân tích rủi ro và các yếu tố tiềm ẩn ảnh hưởng đến tiến độ
+D. Chi phí chi tiết của từng nhiệm vụ và tài nguyên sử dụng
+
+Câu 27: Chia nhỏ yêu cầu phần mềm nhằm mục đích gì?
+A. Đảm bảo chất lượng phần mềm
+B. Giảm chi phí dự án
+C. Tăng cường bảo mật
+*D. Dễ dàng quản lý và theo dõi tiến độ
+
+Câu 28: Quy trình phân chia yêu cầu thường bắt đầu từ đâu?
+*A.Thu thập thông tin yêu cầu
+B.Tạo ma trận rủi ro
+C.Phân bổ nguồn lực
+D.Phân tích báo cáo tài chính
+Câu 29: Khi chia nhỏ yêu cầu phần mềm, điều đầu tiên cần làm là gì?
+A.Phân tích các yếu tố kỹ thuật bao gồm các yêu cầu phần cứng, phần mềm
+*B.Phân tích yêu cầu để xác định các chức năng chính của phần mềm
+C.Thiết kế giao diện người dùng sao cho dễ sử dụng và hiệu quả
+D.Xác định ngân sách và nguồn lực cần thiết cho dự án
+ 
+Câu 30: Kết quả của việc phân chia nhiệm vụ thường được thể hiện dưới dạng nào?
+A.Kế hoạch tiến độ tổng thể
+*B.Danh sách công việc cụ thể
+C.Báo cáo phân tích yêu cầu
+D.Biểu đồ ngân sách dự án
+
+Câu 1: Bước đầu tiên trong quy trình quản lý rủi ro là gì?
+A. Phân tích rủi ro
+*B. Nhận diện rủi ro
+C. Theo dõi và kiểm soát rủi ro
+D. Lập kế hoạch đối phó
+
+Câu 2: Kỹ thuật nào sau đây thường được sử dụng để giảm thiểu rủi ro?
+A. Giảm số lượng yêu cầu của khách hàng
+B. Tăng số lượng nhân viên trong nhóm
+C. Tạm dừng dự án
+*D. Lập ngân sách dự phòng
+
+Câu 3: Tại sao việc nhận diện rủi ro từ sớm lại quan trọng?
+A. Để rút ngắn thời gian triển khai
+*B. Để giảm thiểu tác động tiêu cực của rủi ro
+C. Để cải thiện hiệu suất của nhóm dự án
+D. Để tối ưu hóa ngân sách dự án
+
+Câu 4: Ví dụ nào sau đây thể hiện một rủi ro trong lịch trình dự án?
+A. Ngân sách bị vượt quá dự toán
+B. Đội ngũ làm việc không đồng thuận
+*C. Một nhiệm vụ quan trọng bị trì hoãn
+D. Hệ thống không đáp ứng hiệu suất yêu cầu
+
+Câu 5: Một rủi ro có mức độ ảnh hưởng cao nhưng khả năng xảy ra thấp cần xử lý như thế nào?
+A. Chuyển giao rủi ro cho bên thứ ba hoặc mua bảo hiểm
+B. Chấp nhận rủi ro và không cần theo dõi
+C. Thực hiện các biện pháp giảm thiểu để giảm khả năng xảy ra
+*D. Lập kế hoạch dự phòng
+
+Câu 6:  Rủi ro tài chính trong dự án thường được kiểm soát bằng cách nào?
+A. Tăng số lượng nhân sự tham gia dự án để hoàn thành nhanh hơn
+B. Tăng ngân sách cho dự án để dự phòng các chi phí phát sinh
+C. Thiết lập các quy trình kiểm soát chi phí chặt chẽ
+*D. Lập dự phòng ngân sách và theo dõi chi phí thường xuyên
+
+Câu 7: Sử dụng ma trận rủi ro như thế nào để đánh giá các rủi ro?
+*A. Kết hợp khả năng xảy ra và mức độ ảnh hưởng
+B. Dựa vào mức độ ảnh hưởng của rủi ro
+C. Đánh giá dựa trên tiến độ công việc
+D. Phân loại rủi ro theo chi phí dự án
+
+Câu 8: Kiểm thử tự động thường sử dụng công cụ nào sau đây?
+A. Trello
+B. Gantt chart
+C. PERT
+*D. Selenium
+
+Câu 9: Khi nào nên sử dụng kiểm thử tự động thay vì kiểm thử thủ công?
+A. Khi cần đánh giá giao diện người dùng
+B. Khi không có công cụ hỗ trợ phù hợp
+*C. Khi cần kiểm tra lại nhiều lần một chức năng
+D. Khi ngân sách dự án bị giới hạn
+
+Câu 10: Công cụ nào sau đây hỗ trợ kiểm thử tự động?
+A. A/B testing
+B. Microsoft Project
+C. Slack
+*D. JUnit
+
+Câu 11: Tại sao kiểm thử tự động lại hiệu quả hơn trong việc kiểm tra lại nhiều lần?
+A. Vì không yêu cầu thiết lập môi trường kiểm thử
+B. Vì có thể thực hiện trong thời gian ngắn
+C. Vì không yêu cầu kỹ năng chuyên môn cao
+*D. Vì đảm bảo tính nhất quán và tốc độ kiểm thử
+
+Câu 12: Kiểm thử thủ công có lợi thế gì so với kiểm thử tự động?
+A. Tăng tốc độ kiểm tra
+B. Giảm chi phí cho các dự án lớn
+*C. Dễ dàng kiểm tra trải nghiệm người dùng
+D. Không yêu cầu nhiều nhân lực
+
+Câu 13: Khi nào cần kiểm tra lại một chức năng phần mềm?
+A. Khi khách hàng yêu cầu thêm loại bỏ chức năng cũ
+B. Khi đội phát triển gặp vấn đề
+C. Khi khách hàng yêu cầu thêm chức năng mới
+*D. Sau khi sửa lỗi để đảm bảo không ảnh hưởng đến các phần khác
+
+Câu 14: Điều gì giúp tăng hiệu quả kiểm thử tự động?
+A. Chỉ sử dụng công cụ miễn phí để giảm chi phí
+*B. Thiết kế các kịch bản kiểm thử rõ ràng và chính xác
+C. Đầu tư nhiều công cụ kiểm thử
+D. Thực hiện kiểm thử nhiều lần mà không cần thay đổi kịch bản
+
+Câu 15: Ưu điểm chính của kiểm thử tự động so với kiểm thử thủ công là gì?
+A. Có thể kiểm tra trực tiếp giao diện người dùng
+B. Thực hiện kiểm thử mà không cần kịch bản kiểm thử
+*C. Thực hiện kiểm thử nhanh chóng và chính xác trên quy mô lớn
+D. Không cần nhân lực để thực hiện
+
+Câu 16: Rủi ro kỹ thuật trong dự án thường liên quan đến yếu tố nào?
+*A. Hệ thống không đạt yêu cầu kỹ thuật
+B. Thiếu hụt công nghệ phù hợp
+C. Nguồn lực tài chính không đủ
+D. Thời gian triển khai bị kéo dài
+
+Câu 17: Ma trận rủi ro có vai trò gì trong quản lý dự án?
+A. Để tối ưu hóa chất lượng sản phẩm
+B. Để tạo báo cáo tài chính chi tiết
+*C. Để ưu tiên xử lý các rủi ro quan trọng
+D. Để theo dõi tiến độ dự án
+
+Câu 18: Khi nào cần cập nhật ma trận rủi ro?
+A.  Khi tiến độ dự án đạt mục tiêu
+B. Khi hoàn thành một giai đoạn quan trọng trong dự án
+C. Khi nhóm dự án được bổ sung thêm thành viên mới
+*D. Khi có thay đổi lớn trong yêu cầu dự án
+
+Câu 19: Điều gì xảy ra nếu không có kế hoạch quản lý rủi ro?
+A. Dự án sẽ tự động điều chỉnh khi có vấn đề xảy ra
+B.  Nhóm làm việc sẽ tự động xử lý các rủi ro mà không cần kế hoạch
+*C. Các rủi ro có thể gây ảnh hưởng nghiêm trọng đến dự án
+D. Dự án sẽ hoàn thành nhanh hơn vì không mất thời gian lập kế hoạch
+
+Câu 20: Các yếu tố nào cần được ưu tiên trong kế hoạch phòng ngừa rủi ro?
+A. Rủi ro liên quan đến khách hàng
+B. Chỉ những rủi ro không lường trước được
+*C. Những rủi ro có khả năng xảy ra cao và ảnh hưởng lớn
+D. Tất cả các rủi ro có mức ảnh hưởng nhỏ
+
+Câu 21: Kiểm thử thủ công là gì?
+A.  Kiểm thử tính bảo mật của phần mềm bằng các phương pháp mã hóa
+*B. Kiểm tra các chức năng phần mềm bằng thao tác trực tiếp của người kiểm thử
+C. Kiểm tra các lỗi phần mềm bằng công cụ tự động
+D.  Đánh giá hiệu suất hệ thống qua các bài kiểm tra tải
+
+Câu 22: Trường hợp nào sau đây nên sử dụng kiểm thử thủ công?
+A. Khi có nhiều kịch bản kiểm thử phức tạp cần lặp lại
+B. Khi cần kiểm tra các chức năng lặp lại nhiều lần
+*C. Khi cần kiểm tra trải nghiệm người dùng và giao diện đồ họa
+D. Khi cần giảm thời gian kiểm thử trên nhiều môi trường
+
+*Câu 23: Lợi ích chính của việc sử dụng kiểm thử tự động là gì?
+A. Giảm chi phí dự án
+*B. Tăng hiệu quả và độ chính xác trong kiểm thử
+C. Giảm thời gian thiết kế sản phẩm
+D. Tăng sự hài lòng của người dùng
+
+Câu 24: Mục tiêu chính của kiểm thử chất lượng phần mềm là gì?
+A. Hoàn thành dự án trong thời gian ngắn nhất.
+*B. Đảm bảo phần mềm hoạt động đúng như yêu cầu
+C. Tối ưu hóa chi phí phát triển phần mềm
+D. Tăng sự hài lòng của nhân viên phát triển
+
+Câu 25: Tại sao cần kết hợp kiểm thử thủ công và tự động trong quản lý dự án phần mềm?
+A. Để giảm số lượng công cụ kiểm thử cần thiết
+*B. Để tận dụng lợi ích của cả hai phương pháp
+C. Để tiết kiệm thời gian kiểm thử
+D. Để tạo ấn tượng với khách hàng
+
+Câu 26: Quản lý rủi ro trong dự án nhằm mục đích gì?
+A. Để giảm thiểu chi phí dự án
+*B. Để giảm tác động tiêu cực của các rủi ro
+C. Để tăng năng suất nhóm làm việc
+D. Để tăng tốc độ hoàn thành dự án
+
+Câu 27: Điểm khác biệt lớn nhất giữa kiểm thử thủ công và tự động là gì?
+A. Kiểm thử thủ công chỉ dùng cho hệ thống nhỏ
+B. Kiểm thử tự động không cần nhân lực tham gia
+C. Kiểm thử thủ công không cần quy trình cụ thể.
+*D.  Kiểm thử tự động sử dụng công cụ để tăng tốc độ kiểm tra
+
+Câu 28: Ma trận rủi ro giúp đánh giá rủi ro dựa trên yếu tố nào?
+A. Nguồn lực và ngân sách dự án
+B. Chi phí và thời gian thực hiện
+*C. Khả năng xảy ra và mức độ ảnh hưởng
+D. Tiến độ và yêu cầu khách hàng
+
+Câu 29: Điều gì giúp giảm khả năng xảy ra rủi ro kỹ thuật?
+*A. Áp dụng kiểm thử và đánh giá sớm trong quy trình phát triển
+B. Kéo dài thời gian thực hiện dự án
+C. Thay đổi công nghệ khi gặp vấn đề
+D.  Tăng cường đào tạo và phát triển kỹ năng cho nhân viên
+
+Câu 30: Tiêu chí nào quan trọng nhất trong kiểm thử phần mềm?
+A. Thời gian và chi phí
+B. Độ chính xác và tiến độ
+C. Độ bảo mật và giao diện
+*D.  Độ chính xác và hiệu suất
+
+Câu 1: Công cụ nào dưới đây sử dụng mô hình Kanban như mô hình mặc định để quản lý công việc?
+A. Jira
+*B. Trello
+C. GitHub
+D. Slack
+ 
+Câu 2: Asana là công cụ dùng để làm gì trong quản lý dự án?
+A. Quản lý mã nguồn và theo dõi phiên bản
+B. Tạo kênh giao tiếp và chia sẻ tài liệu
+C. Theo dõi lỗi và quản lý quy trình Agile
+*D. Lập kế hoạch và phân công công việc trong dự án
+ 
+Câu 3: Điểm khác biệt chính giữa Jira và Trello là gì?
+A. Jira phức tạp hơn và không hỗ trợ mô hình Kanban
+B. Jira chỉ phù hợp cho các nhóm lớn
+*C. Jira hỗ trợ tốt hơn trong quản lý quy trình Agile và theo dõi lỗi
+D. Trello không thể quản lý công việc theo bảng nhiệm vụ
+ 
+Câu 4:  Asana hỗ trợ tốt nhất trong quản lý dự án ở khía cạnh nào?
+A. Quản lý giao tiếp trong nhóm làm việc từ xa
+*B. Lập kế hoạch, theo dõi tiến độ và phân công nhiệm vụ cụ thể
+C. Hỗ trợ kiểm thử và bảo trì sản phẩm phần mềm
+D. Theo dõi lỗi trong phần mềm và tối ưu hóa mã nguồn
+ 
+Câu 5: Khi nào nên sử dụng Slack trong dự án phần mềm?
+A. Khi cần tích hợp mã nguồn từ các thành viên
+B. Khi cần theo dõi tiến độ tổng thể của dự án
+C. Khi cần quản lý Sprint trong quy trình Agile
+*D. Khi cần giao tiếp nhanh và chia sẻ tài liệu trong nhóm
+ 
+Câu 6: GitHub hỗ trợ tốt nhất trong khâu nào của dự án phát triển phần mềm?
+A. Theo dõi lỗi và kiểm thử sản phẩm
+B. Lập kế hoạch chi tiết cho dự án
+C. Theo dõi tiến độ công việc và tạo báo cáo chi phí
+*D. Quản lý mã nguồn, hợp nhất thay đổi, và xử lý xung đột
+ 
+Câu 7: Asana và Trello có điểm chung gì trong quản lý dự án?
+A. Cả hai đều tập trung vào quản lý mã nguồn
+B. Cả hai đều tích hợp kiểm thử tự động
+C. Cả hai đều không hỗ trợ mô hình Kanban
+*D. Cả hai đều hỗ trợ phân công nhiệm vụ và theo dõi tiến độ công việc.
+ 
+ 
+Câu 8: Jira hỗ trợ tốt nhất trong việc nào dưới đây?
+A. Theo dõi thay đổi mã nguồn dự án
+B. Phân tích chi phí và ngân sách dự án
+*C. Quản lý Sprint và theo dõi lỗi trong quy trình phát triển
+D. Tạo bảng nhiệm vụ và quản lý tài liệu
+ 
+ 
+Câu 9: Công cụ Slack phù hợp với hoạt động nào trong dự án?
+A. Theo dõi tiến độ công việc và phân bổ nhiệm vụ
+*B. Giao tiếp nhanh và tổ chức kênh thông tin nhóm
+C. Kiểm tra lỗi trong phần mềm phát triển
+D. Quản lý mã nguồn và theo dõi phiên bản
+ 
+ 
+Câu 10: Trello có tính năng nào giúp quản lý tiến độ công việc?
+A. Quản lý mã nguồn và kiểm thử tự động
+B. Lập kế hoạch chi tiết và phân công nhiệm vụ
+C. Theo dõi lỗi và kiểm thử sản phẩm
+*D. Tạo bảng nhiệm vụ và trực quan hóa tiến độ công việc
+ 
+ 
+Câu 11: Điều gì làm cho Jira trở thành công cụ mạnh mẽ trong quản lý nhóm?
+A. Tích hợp quản lý mã nguồn và chia sẻ tài liệu
+*B. Quản lý lỗi, tạo Sprint, và theo dõi quy trình Agile chi tiết
+C. Hỗ trợ kiểm thử tự động trong dự án phần mềm lớn
+D. Cung cấp giao diện tối giản cho mọi loại dự án
+ 
+ 
+Câu 12: Lợi ích chính của việc sử dụng các công cụ quản lý dự án hiện đại như Trello, Asana, và Jira là gì?
+*A. Theo dõi tiến độ, quản lý nhóm, và lập báo cáo chi tiết
+B. Quản lý mã nguồn và kiểm thử tự động
+C. Giảm chi phí phát triển phần mềm
+D. Tự động hóa hoàn toàn quy trình quản lý dự án
+ 
+Câu 13:  Khi nào cần sử dụng Jira thay vì Trello trong quản lý dự án?
+A. Khi cần giao tiếp nhanh với nhóm
+B. Khi dự án có quy mô nhỏ và nhiệm vụ đơn giản
+C. Khi cần quản lý tài liệu dự án
+*D. Khi cần quản lý lỗi và theo dõi quy trình Agile
+ 
+ 
+Câu 14: Tính năng nào của Asana giúp theo dõi chi tiết tiến độ dự án?
+A. Kiểm thử tự động sản phẩm
+*B. Tạo và theo dõi nhiệm vụ trong từng giai đoạn
+C. Quản lý mã nguồn
+D. Quản lý ngân sách dự án
+ 
+ 
+Câu 15: Slack hỗ trợ tốt nhất trong khía cạnh nào của quản lý dự án?
+A. Theo dõi tiến độ và lập báo cáo chi tiết
+B. Phân tích rủi ro và kiểm thử sản phẩm
+*C. Giao tiếp nhanh và tổ chức thông tin trong nhóm
+D. Lập kế hoạch chi tiết và phân bổ nguồn lực
+
+Câu 16: GitHub và GitLab chủ yếu được sử dụng để làm gì trong dự án?
+A. Lập kế hoạch và phân bổ nguồn lực
+B. Theo dõi lỗi và quản lý tài nguyên
+C. Tạo báo cáo tiến độ và chia sẻ thông tin
+*D. Quản lý mã nguồn và hợp nhất các thay đổi
+
+Câu 17: Ưu điểm chính của Jira khi áp dụng quy trình Agile là gì?
+A. Lập kế hoạch tổng thể và phân bổ nguồn lực
+B. Hỗ trợ giao tiếp nhanh giữa các nhóm dự án
+C. Tạo kênh giao tiếp và chia sẻ tài liệu hiệu quả
+*D. Quản lý Sprint, theo dõi lỗi, và tối ưu hóa quy trình
+
+Câu 18: Khi nào Trello không phải là lựa chọn phù hợp trong quản lý dự án?
+A. Khi cần quản lý công việc theo mô hình Kanban
+B. Khi nhóm làm việc nhỏ và yêu cầu đơn giản
+C. Khi dự án không cần công cụ giao tiếp
+*D. Khi dự án yêu cầu theo dõi lỗi phức tạp và quy trình Agile nghiêm ngặt
+
+Câu 19: Công cụ nào dưới đây phù hợp nhất để tạo báo cáo tiến độ chi tiết?
+A. Slack
+B. GitHub
+*C. Asana
+D. Trello
+
+Câu 20: GitHub cung cấp tính năng nào quan trọng trong quản lý mã nguồn?
+A. Tạo báo cáo tiến độ cho khách hàng
+B. Lập kế hoạch tiến độ dự án
+C. Theo dõi lỗi và quản lý Sprint
+*D. Quản lý phiên bản và hợp nhất mã nguồn
+
+Câu 21: Asana giúp cải thiện việc theo dõi tiến độ công việc như thế nào?
+A. Bằng cách cung cấp kênh giao tiếp nhóm
+B. Bằng cách quản lý mã nguồn và phiên bản dự án
+*C. Bằng cách phân chia nhiệm vụ cụ thể và theo dõi hoàn thành từng bước
+D. Bằng cách tích hợp kiểm thử tự động
+
+Câu 22: Khi nào cần sử dụng Slack thay vì các công cụ khác?
+A. Khi cần quản lý lỗi trong quy trình Agile
+B. Khi cần tạo báo cáo tiến độ và phân tích chi phí
+*C. Khi cần giao tiếp nhanh và tổ chức thông tin nhóm hiệu quả
+D. Khi cần theo dõi tiến độ dự án phức tạp
+
+Câu 23: Slack được sử dụng chủ yếu với mục đích nào trong dự án?
+*A. Giao tiếp nhóm và chia sẻ thông tin tức thời
+B. Theo dõi tiến độ công việc hàng ngày
+C. Quản lý và hợp nhất mã nguồn
+D. Phân tích và báo cáo chi phí dự án
+
+Câu 24: Slack giúp cải thiện giao tiếp nhóm như thế nào?
+*A. Cung cấp kênh giao tiếp tức thời và chia sẻ tài liệu dễ dàng
+B. Quản lý tiến độ và lập báo cáo chi phí
+C. Tự động hóa việc phân công nhiệm vụ trong nhóm
+D. Hỗ trợ theo dõi lỗi trong quy trình phát triển
+
+Câu 25: Công cụ Jira hỗ trợ hiệu quả nhất trong hoạt động nào sau đây?
+A. Tạo bảng nhiệm vụ và theo dõi tiến độ.
+B. Quản lý phiên bản mã nguồn dự án
+C. Lập kế hoạch tổng thể cho dự án dài hạn
+*D. Quản lý lỗi và Sprint trong quy trình Agile
+
+Câu 26: Lợi thế của việc sử dụng GitHub trong quản lý dự án là gì?
+A. Phân công nhiệm vụ tự động và lập kế hoạch chi tiết
+*B. Theo dõi thay đổi mã nguồn và quản lý phiên bản mã hiệu quả
+C. Tạo bảng nhiệm vụ và giao tiếp nhóm hiệu quả
+D. Quản lý lỗi và điều phối nguồn lực dự án
+
+Câu 27: Khi nào cần sử dụng tính năng báo cáo tiến độ trên Asana?
+A. Khi cần giao tiếp nhanh với các thành viên nhóm
+B. Khi dự án không có nhiều nhiệm vụ phức tạp
+*C. Khi cần báo cáo tiến độ chi tiết và phân tích công việc
+D. Khi cần tích hợp mã nguồn trong dự án
+
+Câu 28: Khi nào cần sử dụng tính năng báo cáo tiến độ trên Trello?
+A. Khi cần theo dõi lỗi và kiểm thử sản phẩm
+B. Khi cần quản lý nhiệm vụ theo mô hình Kanban
+C. Khi cần lập kế hoạch ngân sách dự án
+D. Khi cần xem thông tin về kết quả dự án
+Câu 29: Tại sao Trello phù hợp cho các dự án nhóm nhỏ?
+A. Vì tích hợp tốt với công cụ kiểm thử tự động
+*B. Vì giao diện trực quan, dễ sử dụng, và quản lý công việc linh hoạt
+C. Vì có khả năng tự động theo dõi lỗi trong dự án
+D. Vì giao diện tập trung vào quản lý mã nguồn
+
+Câu 30: Trello và Asana khác nhau ở điểm nào trong quản lý tiến độ?
+A. Trello hỗ trợ kiểm thử mã nguồn, Asana hỗ trợ theo dõi lỗi
+*B. Trello tập trung vào trực quan hóa nhiệm vụ, Asana tập trung vào lập kế hoạch chi tiết
+C. Trello chỉ phù hợp với dự án nhỏ, Asana phù hợp với mọi dự án
+D. Trello không hỗ trợ mô hình Kanban, Asana hỗ trợ đầy đủ
+
+Câu 1: Chỉ số nào dùng để đo lường hiệu suất chi phí của dự án?
+A. AC
+B. PV
+C. EV
+*D. CPI
+
+Câu 2: Khi Cost Performance Index (CPI) nhỏ hơn 1, điều này nói lên vấn đề gì của việc sử dụng ngân sách dự án?
+A. Dự án hoàn thành chậm tiến độ
+*B. Dự án vượt ngân sách
+C. Dự án đúng ngân sách
+D. Dự án tiết kiệm chi phí
+
+Câu 3: Nếu SPI > 1, điều này cho thấy gì về tiến độ dự án?
+A. Dự án đang chậm tiến độ
+B. Dự án đang đạt đúng ngân sách
+C. Dự án đang vượt ngân sách
+*D. Dự án đang hoàn thành nhanh hơn kế hoạch
+
+Câu 4: Trong công thức TCPI, giá trị BAC đại diện cho yếu tố nào của ngân sách dự án?
+A. Tổng chi phí của dự án
+B. Chi phí thực tế đã chi trả
+*C. Ngân sách dự kiến để hoàn thành dự án
+D. Giá trị công việc hoàn thành
+
+Câu 5: Nếu EAC cao hơn BAC, điều này cho thấy dự án có vấn đề gì?
+A. Dự án hoàn thành đúng ngân sách
+*B. Dự án vượt ngân sách dự kiến
+C. Dự án dự kiến hoàn thành dưới ngân sách
+D. Dự án tiết kiệm chi phí
+
+Câu 6: Nếu CPI = 0.8 và SPI = 1.2, dự án đang gặp phải tình trạng nào dưới đây?
+*A. Dự án vượt ngân sách nhưng nhanh hơn tiến độ
+B. Dự án có tiến độ nhanh nhưng tiết kiệm ngân sách
+C. Dự án tiết kiệm chi phí và chậm hơn tiến độ
+D. Dự án đúng ngân sách và chậm tiến độ
+
+Câu 7: Với CPI = 1.0 và SPI = 1.0 thì trạng thái của dự án là gì?
+A. Dự án tiết kiệm chi phí và nhanh hơn tiến độ
+B. Dự án đúng tiến độ nhưng vượt ngân sách
+*C. Dự án đang diễn ra đúng ngân sách và đúng tiến độ
+D. Dự án vượt ngân sách và chậm tiến độ
+
+Câu 8: Với PV = 1200, AC = 1000 và EV = 1300, trạng thái của dự án là gì?
+A. Dự án đúng tiến độ và vượt ngân sách
+B. Dự án vượt ngân sách và hoàn thành đúng tiến độ
+C. Dự án vượt ngân sách và tiến độ chậm
+*D. Dự án tiết kiệm chi phí và nhanh hơn tiến độ
+
+Câu 9: Để cải thiện hiệu suất chi phí của một dự án, chỉ số CPI cần phải có giá trị như thế nào?
+A. CPI không ảnh hưởng đến chi phí của dự án
+B. CPI phải nhỏ hơn 1
+C. CPI phải bằng 1
+*D. CPI phải lớn hơn 1
+
+Câu 10: Trong Báo Cáo Tiến Độ, phần "Đánh giá rủi ro" sẽ bao gồm
+A. Tổng hợp các thông tin về các nhân sự tham gia dự án
+*B. Liệt kê các rủi ro đã xảy ra hoặc có nguy cơ ảnh hưởng đến tiến độ dự án
+C. Đánh giá về tình hình tài chính của dự án
+D. Đưa ra các đề xuất về ngân sách cho các giai đoạn tiếp theo
+
+Câu 11: Tần suất báo cáo tiến độ thường được quy định như thế nào?
+A. Báo cáo chỉ được gửi cho các bên liên quan vào cuối dự án
+*B. Tần suất báo cáo có thể là hàng tuần, hàng tháng hoặc theo từng giai đoạn quan trọng của dự án
+C. Báo cáo chỉ được thực hiện một lần duy nhất sau khi dự án hoàn thành
+D. Báo cáo chỉ được thực hiện khi có sự thay đổi lớn trong dự án
+
+Câu 12: Nếu thời gian tồn đọng giảm đi, điều này thường cho thấy điều gì về tiến độ dự án?
+*A. Nhóm dự án xử lý vấn đề hiệu quả hơn
+B. Tỷ lệ thay đổi nhân sự cao
+C. Khả năng kiểm soát ngân sách kém
+D. Tăng số lượng vấn đề phát sinh
+
+Câu 13: Trong báo cáo tiến độ, việc theo dõi các mốc quan trọng (milestones) có ý nghĩa gì?
+A. Giúp xác định ngân sách cho các giai đoạn tiếp theo của dự án
+*B. Giúp đánh giá sự tiến triển của dự án so với kế hoạch ban đầu
+C. Giúp phân bổ nguồn lực cho các công việc tiếp theo
+D. Giúp xác định các rủi ro tiềm ẩn trong dự án
+
+Câu 14: Trong báo cáo kết thúc dự án, đánh giá chất lượng sản phẩm dựa trên chỉ số nào?
+*A. Mức độ đáp ứng yêu cầu của khách hàng
+B. Tỷ lệ hoàn thành công việc
+C. Thời gian hoàn thành các mốc quan trọng
+D. Chi phí thực tế so với ngân sách
+
+Câu 15: Báo cáo kết thúc dự án sẽ đề cập đến việc gì liên quan đến rủi ro trong suốt quá trình dự án?
+A. Tổng chi phí để giải quyết rủi ro
+B. Các thay đổi trong kế hoạch quản lý rủi ro
+C. Những rủi ro tiềm ẩn chưa được nhận diện
+*D. Các rủi ro phát sinh và cách thức xử lý
+
+Câu 16: Cost Variance (CV) mang giá trị âm sẽ nói lên điều gì về việc chi tiêu trong dự án?
+*A. Dự án vượt ngân sách
+B. Dự án đúng ngân sách
+C. Dự án tiết kiệm chi phí
+D. Dự án hoàn thành trước tiến độ
+
+Câu 17: SV có giá trị dương nói lên điều gì về mức độ hoàn thành công việc theo kế hoạch?
+
+A. Dự án chậm tiến độ
+B. Dự án vượt quá ngân sách
+*C. Dự án hoàn thành nhanh hơn kế hoạch
+D. Dự án chi phí vượt ngân sách
+
+Câu 18: Nếu Variance at Completion (VAC) có giá trị âm, điều này cho thấy dự án đang gặp phải vấn đề gì về chi phí?
+
+A. Dự án sẽ hoàn thành đúng ngân sách dự kiến
+B. Dự án sẽ hoàn thành với chi phí thấp hơn dự kiến
+C. Dự án đang tiết kiệm chi phí so với ngân sách
+*D. Dự án sẽ hoàn thành với chi phí cao hơn dự kiến
+
+Câu 19: Với EV = 150, AC = 180 và PV = 200, dự án đang ở trạng thái nào dưới đây?
+A. Dự án vượt ngân sách và hoàn thành đúng tiến độ
+B. Dự án tiết kiệm chi phí và nhanh hơn tiến độ
+C. Dự án đúng tiến độ và vượt ngân sách
+*D. Dự án vượt ngân sách và tiến độ chậm
+
+Câu 20: Mục tiêu chính của Báo Cáo Tiến Độ là gì?
+A. Để tóm tắt các bài học kinh nghiệm từ dự án
+*B. Cung cấp thông tin chi tiết về tình hình hiện tại của dự án và giúp quản lý đánh giá tiến độ so với kế hoạch
+C. Để xác định các thành viên tham gia trong dự án
+D. Đánh giá kết quả tài chính của dự án
+
+Câu 21: Nếu thời gian phản hồi và xử lý rủi ro kéo dài, điều này có thể gây ra tác động gì cho dự án?
+A. Giảm nguy cơ lỗi phát sinh
+B. Tăng sự hài lòng của khách hàng
+C. Tiến độ dự án đạt được đúng kế hoạch
+*D. Làm chậm tiến độ và tăng nguy cơ phát sinh rủi ro khác
+
+Câu 22: Chỉ số Actual Cost (AC) dùng để đo lường giá trị nào trong quản lý dự án?
+A. Tổng ngân sách dự án
+B. Giá trị công việc đã hoàn thành đến thời điểm hiện tại
+*C. Chi phí thực tế chi trả cho công việc đã hoàn thành
+D. Chi phí dự kiến hoàn thành công việc
+Câu 23: Chỉ số nào giúp dự đoán chi phí cần thiết để hoàn thành dự án trong phạm vi ngân sách?
+A. SPI
+B. PV
+*C. TCPI
+D. CPI
+
+Câu 24: Tại sao báo cáo tiến độ là một phần quan trọng trong quá trình quản lý dự án?
+A. Vì nó chỉ ra các chi phí phát sinh và giúp lập kế hoạch tài chính
+B. Vì nó đánh giá sự ảnh hưởng của dự án đối với các bên liên quan
+C. Vì nó giúp xác định các mục tiêu mới cho dự án
+*D. Vì nó giúp đánh giá tình trạng dự án và đảm bảo rằng các hoạt động dự án diễn ra theo kế hoạch.
+
+Câu 25: CPI = 1 phản ánh gì về tình hình chi phí dự án?
+*A. Dự án đang đạt đúng ngân sách
+B. Dự án đang tiết kiệm chi phí
+C. Dự án đang vượt ngân sách
+D. Dự án đang hoàn thành chậm tiến độ
+
+Câu 26: Tỷ lệ thay đổi nhân sự cao trong báo cáo tiến độ có thể phản ánh điều gì về nhóm dự án?
+A. Ngân sách được kiểm soát tốt
+*B. Sự thiếu ổn định trong đội ngũ làm việc
+C. Khả năng hoàn thành dự án đúng hạn
+D. Tỷ lệ hoàn thành công việc cao
+
+Câu 27: Trong các công thức dưới đây, đâu là công thức tính Cost Variance (CV)?
+A. CV = AC - EV
+*B. CV = EV - AC
+C. CV = PV - EV
+D. CV = EV + PV
+
+Câu 28: PV (Planned Value) dùng để đo lường giá trị nào trong quản lý dự án?
+A. Giá trị thực tế chi phí đã chi trả
+B. Giá trị công việc đã hoàn thành
+*C. Giá trị dự kiến của công việc cần hoàn thành theo kế hoạch
+D. Giá trị công việc đã hoàn thành
+
+Câu 29: Với EV = 600, AC = 700 và PV = 800, trạng thái của dự án là gì?
+A. Dự án đúng tiến độ và vượt ngân sách
+B. Dự án tiết kiệm chi phí và nhanh hơn tiến độ
+C. Dự án hoàn thành đúng tiến độ nhưng vượt ngân sách
+*D. Dự án vượt ngân sách và tiến độ chậm
+Câu 30: Earned Value (EV) giúp phản ánh vấn đề gì trong quản lý dự án?
+A. Ngân sách của dự án
+*B. Mức độ hoàn thành công việc tính đến thời điểm hiện tại
+C. Tỷ lệ chi phí và tiến độ của dự án
+D. Hiệu suất chi phí của dự án
+
+Câu 1: Kỹ năng giao tiếp hiệu quả trong quản lý dự án phần mềm giúp ích gì?
+A. Tối ưu hóa sử dụng ngân sách
+*B. Cải thiện mối quan hệ giữa các bên liên quan
+C. Đảm bảo tính bảo mật của phần mềm
+D. Giúp tăng tốc độ phát triển phần mềm
+
+Câu 2: Kỹ năng giao tiếp tốt có thể giúp gì trong quản lý dự án phần mềm?
+A. Giảm thiểu rủi ro kỹ thuật
+*B. Tạo sự hiểu biết và đồng thuận giữa các bên liên quan
+C. Phân tích yêu cầu hệ thống
+D. Xác định phạm vi dự án
+
+Câu 3: Kỹ năng lãnh đạo trong quản lý dự án phần mềm là gì?
+A. Phân tích và phát triển phần mềm
+B. Quản lý tài chính dự án
+C. Quản lý tài nguyên phần mềm
+*D. Chỉ đạo, hướng dẫn và động viên các thành viên trong nhóm
+
+Câu 4: Kỹ năng giải quyết xung đột cần có yếu tố nào quan trọng nhất?
+*A. Lắng nghe và thấu hiểu các bên
+B. Kỹ năng thuyết phục
+C. Kỹ năng tổ chức
+D. Sự quyết đoán
+
+Câu 5: Trong phương pháp SMART, chữ "S" đại diện cho điều gì?
+A. Strategic (Chiến lược)
+*B. Specific (Cụ thể)
+C. Simple (Đơn giản)
+D. Successful (Thành công)
+
+Câu 6: Khi đối mặt với xung đột trong nhóm, lãnh đạo dự án nên ưu tiên làm gì?
+A. Áp đặt quyết định một cách độc lập để nhanh chóng xử lý xung đột
+*B. Lắng nghe ý kiến của các thành viên và tìm hướng giải quyết chung
+C. Đưa ra hình phạt để nhanh chóng giải quyết xung đột
+D. Tạm thời dừng công việc của nhóm để xung đột tự lắng xuống
+
+Câu 7: Kỹ năng giao tiếp hiệu quả trong quản lý dự án phần mềm sẽ giúp gì cho nhóm?
+A. Chia sẻ các lỗi và khắc phục sự cố kỹ thuật
+B. Tạo mối quan hệ thân thiết với các đối tác
+*C. Đảm bảo các yêu cầu khách hàng được truyền đạt chính xác
+D. Tăng khả năng sáng tạo và đổi mới trong nhóm
+
+Câu 8: Trong quản lý dự án phần mềm, kỹ năng giao tiếp giúp gì cho các bên liên quan ngoài nhóm phát triển?
+A. Tạo cơ hội giao tiếp không chính thức giữa các bên
+*B. Đảm bảo các thay đổi về yêu cầu phần mềm được ghi nhận và xử lý
+C. Giảm thiểu chi phí dự án
+D. Đảm bảo tính bảo mật của dự án
+
+Câu 9: Kỹ năng lắng nghe tích cực trong quản lý dự án phần mềm giúp ích như thế nào cho người quản lý?
+A. Giảm thiểu rủi ro trong dự án
+B. Tối ưu hóa chi phí dự án
+*C. Xây dựng mối quan hệ tốt với các thành viên trong nhóm
+D. Tăng cường khả năng quyết định nhanh chóng
+
+Câu 10: Với đề xuất mục tiêu: "Tăng cường hiệu quả của nhóm trong thời gian tới." Theo phương pháp SMART, mục tiêu này thiếu yếu tố nào?
+*A. Specific (Cụ thể)
+B. Relevant (Phù hợp)
+C. Achievable (Có thể đạt được)
+D. Timely (Có thời hạn)
+
+Câu 11: Với mục tiêu "Tăng doanh thu sản phẩm lên 15% trong vòng 3 tháng để đóng góp vào mục tiêu doanh thu chung của công ty." Mục tiêu này đáp ứng yếu tố nào của phương pháp SMART?
+A. Các yếu tố "Relevant" (Phù hợp) và "Measurable" (Đo lường được)
+B. Chỉ có yếu tố "Achievable" (Có thể đạt được)
+C. Chỉ có yếu tố "Specific" (Cụ thể)
+*D. Các yếu tố "Specific" (Cụ thể), "Measurable" (Đo lường được), và "Timely" (Có thời hạn)
+
+Câu 12: Trong một cuộc họp nhóm, một thành viên không tham gia thảo luận dù có câu hỏi cần được trả lời. Nhà quản lý nên làm gì?
+A. Dừng cuộc họp và giải thích cho thành viên đó biết việc tham gia là quan trọng.
+*B. Mời thành viên đó chia sẻ quan điểm của mình.
+C. Bỏ qua và tiếp tục cuộc họp.
+D. Chuyển cuộc họp sang một chủ đề khác.
+
+Câu 13: Phương pháp Eisenhower Matrix chủ yếu được sử dụng để làm gì?
+A. Tìm kiếm các giải pháp sáng tạo cho công việc
+B. Tối ưu hóa việc phân bổ nguồn lực trong dự án
+*C. Phân loại các công việc dựa trên mức độ quan trọng và tính khẩn cấp
+D. Tăng tốc độ hoàn thành công việc trong một dự án
+
+Câu 14: Là quản lý của một dự án phần mềm và đang với một cuộc họp khẩn cấp với khách hàng trong khi có một buổi đào tạo lãnh đạo sắp diễn ra. Dựa trên Eisenhower Matrix, bạn sẽ xử lý như thế nào?
+A. Đặt cả cuộc họp và đào tạo vào ô "Quan trọng và khẩn cấp" và làm cả hai
+B. Hoãn cả hai nhiệm vụ cho đến khi có thể giải quyết sau.
+*C. Chuyển đào tạo lãnh đạo sang ô "Quan trọng nhưng không khẩn cấp", xử lý cuộc họp khách hàng ngay
+D. Hoãn cuộc họp khách hàng để tham gia buổi đào tạo lãnh đạo
+
+Câu 15: Bạn nhận được một nhiệm vụ "Cập nhật thông tin dự án" trên mạng nội bộ của công ty, nhiệm vụ này có thể hoàn thành vào cuối tuần, nhưng không ảnh hưởng đến tiến độ dự án. Theo Eisenhower Matrix, bạn sẽ xử lý nhiệm vụ này như thế nào?
+A. Thực hiện ngay để không để trễ hạn
+*B. Đưa vào ô "Quan trọng nhưng không khẩn cấp" và lập kế hoạch hoàn thành vào cuối tuần
+C. Đưa vào ô "Quan trọng và khẩn cấp", yêu cầu hoàn thành ngay
+D. Đưa vào ô "Không quan trọng và không khẩn cấp", làm khi có thời gian
+
+Câu 16: Đàm phán thành công cần có yếu tố nào quan trọng nhất?
+A. Giữ vững quan điểm cá nhân
+B. Thời gian nhanh chóng
+C. Kiến thức kỹ thuật vững chắc
+*D. Sự thỏa hiệp hợp lý
+
+Câu 17: Lãnh đạo có thể tạo động lực cho nhóm trong quản lý dự án bằng cách nào?
+A. Đưa ra các yêu cầu cụ thể mà không giải thích rõ ràng
+B. Đưa ra quyết định nhanh chóng mà không tham khảo ý kiến
+C. Giám sát chặt chẽ tất cả các bước trong dự án
+*D. Khuyến khích sự sáng tạo và giải quyết vấn đề của nhóm
+
+Câu 18: Khi giải quyết xung đột, nhà lãnh đạo cần duy trì thái độ nào?
+A. Thận trọng và do dự
+B. Cứng rắn và không linh động
+*C. Mềm mỏng và tìm kiếm sự đồng thuận
+D. Không can thiệp vào xung đột
+
+Câu 19: Một thành viên trong nhóm gặp khó khăn trong việc hoàn thành nhiệm vụ, nhà quản lý nên làm gì để hỗ trợ?
+A. Đưa công việc đó cho thành viên khác trong nhóm.
+B. Để họ tự giải quyết và không can thiệp.
+C. Chỉ đạo họ cách làm mà không hỏi thêm.
+*D. Đưa ra hướng dẫn và tìm cách giúp họ giải quyết vấn đề.
+
+Câu 20: Trong việc làm việc với khách hàng về yêu cầu thay đổi tính năng, để duy trì sự giao tiếp hiệu quả, nên làm gì?
+A. Đồng ý thay đổi ngay mà không cần thảo luận thêm.
+*B. Giải thích tác động của thay đổi và lắng nghe phản hồi từ khách hàng.
+C. Phủ nhận yêu cầu thay đổi và giữ nguyên kế hoạch.
+D. Đặt yêu cầu lên cấp trên để quyết định.
+
+Câu 21: Khi thấy nhóm đang có dấu hiệu mất động lực, bạn có thể làm gì để khuyến khích mọi người làm việc tích cực trở lại?
+A. Phê bình những ai chưa làm tốt
+*B. Tổ chức buổi chia sẻ để đề xuất giải pháp cải thiện
+C. Tạo áp lực bằng cách tăng cường trách nhiệm
+D. Tăng cường giám sát thời gian làm việc
+
+Câu 22: Một lỗi nghiêm trọng trong phần mềm đang ảnh hưởng đến khách hàng và cần được sửa ngay lập tức. Theo Eisenhower Matrix, bạn làm thế nào để xử lý tình huống này?
+*A. Phân loại lỗi vào ô "Quan trọng và khẩn cấp", xử lý ngay lập tức
+B. Hoãn việc sửa lỗi để tập trung vào các nhiệm vụ không khẩn cấp hơn
+C. Đặt nhiệm vụ này vào ô "Quan trọng nhưng không khẩn cấp" và giao cho nhân viên xử lý
+D. Giao lại nhiệm vụ này cho người khác và không can thiệp
+Câu 23: Đàm phán trong quản lý dự án phần mềm là gì?
+
+*A. Là việc tìm kiếm các giải pháp thỏa đáng cho các bên liên quan
+B. Là việc giám sát tiến độ thực hiện dự án
+C. Là việc giải quyết các vấn đề kỹ thuật
+D. Là việc thuyết phục các bên chia sẻ ngân sách dự án
+
+Câu 24: Kỹ năng giải quyết xung đột giúp ích gì trong quản lý dự án phần mềm?
+
+*A. Xử lý hiệu quả các vấn đề phát sinh giữa các thành viên trong nhóm
+B. Đưa ra quyết định về tài chính dự án
+C. Đảm bảo tất cả các thành viên trong nhóm đồng ý với một giải pháp duy nhất
+D. Xây dựng chiến lược phát triển dự án
+
+Câu 25: Một nhà lãnh đạo dự án cần làm gì khi giải quyết xung đột trong nhóm?
+
+A. Phân công lại công việc cho các thành viên
+*B. Thực hiện một cuộc họp để tìm giải pháp hợp lý
+C. Thảo luận với các bên liên quan về chiến lược dự án
+D. Đưa ra quyết định đơn phương
+
+Câu 26: Nhà quản lý của một dự án phần mềm cần có khả năng nào để giúp nhóm hoạt động hiệu quả?
+
+*A. Phân công công việc đúng người đúng việc
+B. Đưa ra các quyết định kỹ thuật nhanh chóng
+C. Giải quyết mọi vấn đề kỹ thuật
+D. Tất cả các yếu tố trên
+Câu 27: Để duy trì tiến độ dự án, nhà quản lý cần làm gì khi nhóm gặp phải vấn đề về thời gian?
+
+A. Tăng cường phân công công việc cho các thành viên khác
+B. Giảm bớt các yêu cầu khách hàng
+C. Đảm bảo ngân sách được kiểm soát nghiêm ngặt
+*D. Đưa ra các biện pháp điều chỉnh tiến độ phù hợp
+
+Câu 28: Kỹ năng giao tiếp trong quản lý dự án phần mềm giúp gì cho nhà quản lý khi làm việc với khách hàng?
+
+A. Phân tích dữ liệu người dùng cuối
+B. Xác định ngân sách và các chi phí dự án
+C. Giảm thiểu sự phức tạp của các yêu cầu
+*D. Đảm bảo các yêu cầu kỹ thuật được hiểu rõ
+
+Câu 29: Với mục tiêu của nhóm là "Hoàn thành báo cáo tiến độ mỗi tuần một lần để theo dõi hiệu quả làm việc." Theo phương pháp SMART, mục tiêu này đã đáp ứng yếu tố nào?
+
+*A. Timely (Có thời hạn)
+B. Relevant (Phù hợp)
+C. Measurable (Đo lường được)
+D. Achievable (Có thể đạt được)
+
+Câu 30: Thế nào là một môi trường làm việc tích cực giúp đảm bảo chất lượng dự án?
+
+*A. Môi trường khuyến khích sáng tạo và hợp tác
+B. Tăng áp lực hoàn thành công việc
+C. Hạn chế tương tác để tránh xung đột
+D. Môi trường ít giao tiếp và tập trung vào nhiệm vụ cá nhân
+
+
+Câu 1: Mục đích của việc kiểm thử phần mềm trong quy trình phân phối là gì?
+*A. Đảm bảo phần mềm đáp ứng các yêu cầu về chức năng
+B. Đảm bảo phần mềm không có lỗi bảo mật
+C. Đảm bảo phần mềm tương thích với hệ điều hành
+D. Kiểm tra tính ổn định và hiệu suất của phần mềm
+ 
+Câu 2: Kênh phân phối nào thường được sử dụng để phát hành phần mềm cho thiết bị di động?
+A. GitHub
+B. Amazon Web Services
+C. Dropbox
+*D. App Store và Google Play
+ 
+Câu 3: Một trong những lợi ích của việc phân phối phần mềm theo phương pháp Agile là gì?
+A. Giảm chi phí phát triển
+B. Tăng tính bảo mật của phần mềm
+C. Giảm bớt việc kiểm thử
+*D. Tăng tốc độ phát hành và phản hồi nhanh chóng từ người dùng
+ 
+Câu 4: Trong quy trình phân phối phần mềm, tại sao việc kiểm thử bảo mật lại được thực hiện trong suốt vòng đời phát triển?
+A. Để đảm bảo phần mềm không có lỗi hệ thống
+B. Để kiểm tra tính năng của phần mềm
+*C. Để đảm bảo phần mềm an toàn trước các mối đe dọa bảo mật
+D. Để kiểm tra tính khả dụng của phần mềm
+ 
+Câu 5: Trong quy trình phân phối phần mềm, vai trò của kiểm thử đơn vị là gì?
+*A. Để kiểm tra từng phần nhỏ của mã nguồn
+B. Để kiểm tra khả năng bảo mật của phần mềm
+C. Để kiểm tra các chức năng của phần mềm
+D. Để kiểm tra hiệu suất của phần mềm
+ 
+Câu 6: Một trong những lợi ích của việc lập kế hoạch kiểm thử kỹ lưỡng là gì?
+A. Giúp kiểm thử phần mềm trên các môi trường khác nhau
+B. D. Giúp người dùng cuối tự kiểm thử phần mềm
+C. Giúp phát triển phần mềm nhanh chóng hơn
+*D. Giúp phát hiện và khắc phục lỗi sớm, giảm chi phí phát triển
+ 
+Câu 7: Trong quy trình phân phối phần mềm, công cụ nào chủ yếu được sử dụng để tự động hóa quá trình xây dựng và triển khai phần mềm?
+*A. Jenkins
+B. Docker
+C. Git
+D. Kubernetes
+ 
+Câu 8: Quy trình phân phối phần mềm sử dụng phương pháp nào để phát hành liên tục các bản cập nhật phần mềm?
+A. Scrum
+*B. Continuous Integration (CI)
+C. Agile
+D. Waterfall
+ 
+Câu 9: Khi lập kế hoạch bảo trì phần mềm, yếu tố quan trọng cần xác định là gì?
+A. Các yêu cầu bảo mật
+B. Các vấn đề về phần cứng
+*C. Các yêu cầu từ người dùng và các tính năng cần duy trì
+D. Các vấn đề về giao diện người dùng
+ 
+Câu 10: Phân tích Pareto trong bảo trì phần mềm được sử dụng để làm gì?
+A. Phân tích các lỗi hệ thống
+*B. Phân tích các yếu tố gây ảnh hưởng lớn nhất đến chất lượng sản phẩm
+C. Xác định các tính năng cần được cải tiến
+D. Đo lường độ phức tạp của phần mềm
+ 
+Câu 11: Khi lập kế hoạch bảo trì phần mềm, tại sao việc đánh giá hiệu quả bảo trì định kỳ lại quan trọng?
+*A. Để đảm bảo phần mềm đáp ứng được nhu cầu người dùng trong tương lai
+B. Để tránh lãng phí nguồn lực khi bảo trì
+C. Để làm mới giao diện phần mềm
+D. Để xác định các tính năng phần mềm không còn phù hợp
+ 
+ 
+Câu 12: Phản hồi từ người dùng có thể được thu thập qua những công cụ nào?
+A. Phân tích dữ liệu từ hệ thống
+B. Chỉ sử dụng khảo sát trực tuyến
+C. Chỉ qua các chương trình hỗ trợ khách hàng
+*D. Khảo sát người dùng, chương trình hỗ trợ khách hàng và phân tích dữ liệu sử dụng phần mềm
+ 
+Câu 13: Nếu nhóm phát triển muốn cải tiến chức năng đăng nhập của ứng dụng để kiểm tra hai phiên bản giao diện đăng nhập với mục tiêu cải thiện tỷ lệ người dùng hoàn thành đăng nhập, nhóm phát triển cần sử dụng công cụ nào?
+A. Ma trận tác động - độ phức tạp
+*B. A/B Testing
+C. Phân tích SWOT
+D. Phân tích Pareto
+ 
+Câu 14: Nếu nhóm phát triển muốn đánh giá các điểm mạnh, điểm yếu, cơ hội và mối đe dọa liên quan đến việc cải tiến chức năng đăng nhập, nhằm xây dựng chiến lược bảo trì dài hạn, nhóm phát triển cần sử dụng công cụ nào?
+*A. Phân tích SWOT
+B. Ma trận tác động - độ phức tạp
+C. Phân tích Pareto
+D. A/B Testing
+ 
+Câu 15: Mục tiêu của việc sử dụng phương pháp phân tích Pareto trong kế hoạch bảo trì phần mềm là gì?
+A. Xác định các lỗi phần mềm ít quan trọng
+*B. Tập trung vào việc cải tiến các vấn đề gây ra hầu hết lỗi và sự cố
+C. Tìm ra các tính năng dư thừa cần loại bỏ
+D. Phân loại các vấn đề dựa trên số lượng người sử dụng bị ảnh hưởng
+
+Câu 16: Khi phân phối phần mềm, một trong những yếu tố quan trọng cần kiểm tra là gì?
+A. Mã nguồn phần mềm
+B. Hiệu suất của phần mềm dưới tải cao
+C. Tính tương thích với phần mềm khác
+*D. Cả B và C đều đúng
+
+Câu 17: Mục đích của việc triển khai phần mềm trong quy trình phân phối là gì?
+Đáp án:
+A. Để kiểm tra tính bảo mật của phần mềm
+B. Để xác minh các yêu cầu kỹ thuật của phần mềm
+*C. Để phát hành phần mềm cho người dùng cuối
+D. Để kiểm tra hiệu suất phần mềm dưới tải nặng
+
+Câu 18: Nếu nhóm phát triển nhận thấy rằng phần lớn các sự cố trong ứng dụng phát sinh từ một số ít tính năng như chức năng đăng nhập và quản lý tài khoản, nhóm phát triển cần sử dụng công cụ nào để phân tích và xác định những lỗi quan trọng nhất cần ưu tiên sửa chữa?
+A. Phân tích SWOT
+B. A/B Testing
+C. Ma trận tác động - độ phức tạp
+*D. Phân tích Pareto
+
+Câu 19: Để lập kế hoạch bảo trì phần mềm hiệu quả, nhóm phát triển cần phải làm gì?
+*A. Cải tiến phần mềm dựa trên phản hồi của người dùng và dữ liệu thực tế
+B. Đảm bảo phần mềm không có lỗi
+C. Chỉ tập trung vào các tính năng mới mà không chú trọng đến bảo trì
+D. Đảm bảo phần mềm được cập nhật đều đặn
+
+Câu 20: Kiểm thử chấp nhận người dùng (UAT) có vai trò gì trong quy trình phân phối phần mềm?
+*A. Đảm bảo phần mềm đáp ứng các yêu cầu chức năng của người dùng cuối
+B. Đảm bảo phần mềm hoạt động trên nhiều thiết bị
+C. Đảm bảo phần mềm được triển khai nhanh chóng
+D. Đảm bảo phần mềm không có lỗi bảo mật
+
+Câu 21: Một trong những phương pháp nào dưới đây được sử dụng để đáp ứng nhu cầu người dùng trong bảo trì phần mềm?
+*A. A/B testing
+B. Phân tích SWOT
+C. Ma trận tác động - độ phức tạp
+D. Cả A, B, C đều đúng
+
+Câu 22: Trong quy trình phân phối phần mềm, kiểm thử nào giúp xác định phần mềm có đáp ứng yêu cầu của người dùng cuối không?
+A. Kiểm thử hệ thống
+B. Kiểm thử tích hợp
+C. Kiểm thử đơn vị
+*D. Kiểm thử chấp nhận người dùng (UAT)
+
+Câu 23: Trong quy trình phân phối phần mềm, mục đích của việc triển khai liên tục (Continuous Deployment) là gì?
+A. Đảm bảo phần mềm không có lỗi bảo mật
+*B. Đảm bảo phần mềm luôn sẵn sàng để phát hành khi cần
+C. Đảm bảo phần mềm không có lỗi chức năng
+D. Kiểm tra hiệu suất của phần mềm dưới tải nặng
+
+Câu 24: Bảo trì phần mềm là một quá trình liên tục và cần lập kế hoạch vì lý do nào?
+*A. Để duy trì chất lượng và hiệu quả sử dụng của phần mềm
+B. Để tập trung vào việc phát triển tính năng mới
+C. Để giảm thiểu các sự cố ngoài ý muốn
+D. Để thay thế phần mềm cũ bằng một phần mềm mới
+
+Câu 25: Trong việc lập kế hoạch bảo trì, ma trận tác động - độ phức tạp được sử dụng để làm gì?
+A. Xác định các yếu tố ảnh hưởng đến hiệu suất phần mềm
+B. Đo lường sự hài lòng của người dùng
+*C. Phân loại các yêu cầu bảo trì theo mức độ quan trọng và độ kho thực hiện
+D. Kiểm tra tính năng phần mềm mới
+
+Câu 26: Vì sao việc lập kế hoạch bảo trì phần mềm phải được thực hiện từ giai đoạn đầu của dự án?
+A. Để giảm chi phí bảo trì sau này
+B. Để xác định các tính năng phần mềm không cần thiết
+*C. Để chuẩn bị cho các sự thay đổi trong tương lai và nâng cao khả năng duy trì phần mềm
+D. Để đảm bảo phần mềm sẽ không có lỗi trong suốt vòng đời của nó
+
+Câu 27: Loại phần mềm nào sau đây thường xuyên được bảo trì trong quá trình phát triển?
+A. Phần mềm đang trong giai đoạn thử nghiệm
+B. Phần mềm đã hoàn thành và không thay đổi
+*C. Phần mềm đang chạy và sử dụng bởi người dùng
+D. Phần mềm chỉ được bảo trì khi có lỗi nghiêm trọng
+
+Câu 28: Ma trận tác động - độ phức tạp giúp ích gì cho quá trình bảo trì phần mềm?
+A. Đảm bảo tất cả các lỗi phần mềm được sửa chữa ngay lập tức
+B. Xác định các tác động của các lỗi phần mềm đối với người dùng
+C. Xác định các tính năng phần mềm mới cần phát triển
+*D. Phân loại các yêu cầu và sửa lỗi theo mức độ tác động và độ khó thực hiện
+
+Câu 1: Bước đầu tiên trong trong vòng đời phát triển phần mềm là gì?
+A. Phát triển
+B. Phân tích yêu cầu
+C. Thiết kế
+*D. Lập kế hoạch
+
+Câu 2: Giai đoạn thiết kế phần mềm thường bao gồm hoạt động nào sau đây?
+A. Phân tích ngân sách và lập kế hoạch tiến độ
+B. Phân chia nhiệm vụ và quản lý lỗi
+C. Viết mã nguồn và kiểm thử sản phẩm
+*D. Xây dựng mô hình và tạo tài liệu thiết kế
+
+Câu 3: Một trong các mục tiêu chính của giai đoạn triển khai là gì?
+A. Đảm bảo tài liệu thiết kế chi tiết
+B. Tăng tốc độ phát triển mã nguồn
+C. Giảm chi phí kiểm thử sản phẩm
+*D. Đưa phần mềm vào sử dụng thực tế
+
+Câu 4: Khi nào cần điều chỉnh kế hoạch dự án?
+*A. Khi yêu cầu khách hàng thay đổi
+B. Khi nhóm hoàn thành kiểm thử sản phẩm
+C. Khi dự án đạt tiến độ dự kiến
+D. Khi không có vấn đề nào phát sinh
+
+Câu 5: Vai trò của phân tích yêu cầu trong giai đoạn lập kế hoạch là gì?
+A. Giúp tối ưu hóa mã nguồn sản phẩm
+B. Tạo kênh giao tiếp giữa các thành viên nhóm
+C. Hỗ trợ kiểm thử và đánh giá chất lượng
+*D. Xác định rõ mục tiêu và phạm vi dự án
+
+Câu 6: Khi nào cần lập báo cáo tiến độ dự án?
+A. Khi dự án đã hoàn thành tất cả các giai đoạn
+B. Chỉ khi có yêu cầu từ khách hàng
+*C. Khi cần đánh giá các nhiệm vụ đã hoàn thành
+D. Chỉ khi nhóm gặp phải vấn đề rủi ro
+
+Câu 7: Tại sao việc lập kế hoạch tổng quan lại quan trọng trong quản lý dự án?
+A. Tăng tốc độ phát triển mã nguồn
+B. Giúp giảm chi phí kiểm thử sản phẩm
+*C. Đảm bảo tất cả các thành viên hiểu rõ mục tiêu dự án
+D. Giảm thời gian thực hiện các giai đoạn bảo trì
+
+Câu 8: Yếu tố nào đóng vai trò quan trọng nhất trong lập lịch trình dự án?
+A. Tài liệu hướng dẫn kỹ thuật
+B. Chi phí thực hiện từng nhiệm vụ
+C. Đánh giá hiệu suất nhóm làm việc
+*D. Thời gian hoàn thành các nhiệm vụ cụ thể
+
+Câu 9: Giai đoạn phát triển phần mềm tập trung vào hoạt động nào?
+*A. Viết mã nguồn và kiểm thử từng phần
+B. Đánh giá hiệu quả chi phí dự án
+C. Quản lý tài liệu và giao tiếp nhóm
+D. Tạo tài liệu hướng dẫn sử dụng
+
+Câu 10: Khi nào cần sử dụng ma trận rủi ro trong dự án?
+A. Khi dự án đã hoàn thành
+B. Khi phân bổ nguồn lực cho các nhóm
+*C. Khi nhận diện các vấn đề tiềm ẩn
+D. Trong giai đoạn phát triển bắt đầu
+
+Câu 11: Điều gì giúp cải thiện hiệu quả trong giai đoạn triển khai dự án?
+A. Giảm thời gian thực hiện các nhiệm vụ phức tạp
+B. Tăng số lượng thành viên nhóm dự án
+C. Đảm bảo tất cả các thành viên hoàn thành nhiệm vụ
+*D. Sử dụng công cụ theo dõi và phân tích tiến độ hiệu quả
+
+Câu 12: Tại sao kiểm thử tự động lại quan trọng trong dự án phần mềm?
+A. Giúp giảm chi phí dự án
+B. Loại bỏ mọi rủi ro dự án
+*C. Tiết kiệm thời gian và giảm sai sót lặp lại
+D. Thay thế hoàn toàn kiểm thử thủ công
+
+Câu 13: Khi phát sinh vấn đề trong quá trình phát triển, cần làm gì để giữ tiến độ?
+A. Tăng tốc độ thực hiện các nhiệm vụ đang bị chậm trễ
+B. Bổ sung thêm nhân sự vào nhóm dự án hiện tại
+C. Giảm chi phí ngân sách tổng thể của dự án
+*D. Đưa ra giải pháp hợp lý và điều chỉnh nguồn lực khi cần thiết
+
+Câu 14: Nếu rủi ro lớn xảy ra trong giai đoạn phát triển, quản lý dự án sẽ phải xử lý như thế nào?
+A. Tạm dừng các giai đoạn tiếp theo và chờ phản hồi từ khách hàng liên quan
+B. Tăng ngân sách thực hiện dự án mà không cần phê duyệt chính thức
+C. Cắt giảm một số tính năng không quan trọng trong yêu cầu ban đầu
+*D. Kích hoạt kế hoạch ứng phó rủi ro và đánh giá mức độ ảnh hưởng chi tiết
+
+Câu 15: Làm thế nào để cải tiến quy trình dự án từ các bài học kinh nghiệm?
+ A. Chuyển giao toàn bộ trách nhiệm cải tiến quy trình cho người trưởng nhóm quản lý 
+B. Bổ sung thêm nhân sự có kỹ năng cao cho các giai đoạn quan trọng của dự án 
+C. Lặp lại toàn bộ quy trình đã thực hiện trong dự án trước đó mà không thay đổi 
+*D. Đánh giá kỹ các sai sót và thực hiện cải thiện chi tiết trong giai đoạn lập kế hoạch
+
+Câu 16: Khi nào nên bắt đầu quá trình bảo trì phần mềm?
+*A. Sau khi phần mềm đã được triển khai
+B. Trong giai đoạn kiểm thử sản phẩm
+C. Sau khi phân tích ngân sách dự án
+D. Khi khách hàng phê duyệt kế hoạch
+
+Câu 17: Yếu tố nào không thuộc giai đoạn lập kế hoạch?
+A. Dự toán ngân sách và nguồn lực
+B. Phân tích và chia nhỏ nhiệm vụ
+C. Xác định thời gian hoàn thành dự án
+*D. Kiểm tra và sửa lỗi phần mềm
+
+Câu 18: Thành phần nào cần thiết trong kế hoạch tổng quan của dự án?
+A. Quy trình quản lý tài liệu khách hàng
+B. Kiểm tra và xử lý rủi ro tài chính
+C. Đánh giá hiệu quả kiểm thử tự động
+*D. Lịch trình, ngân sách và phân bổ nhiệm vụ
+
+Câu 19: Điều gì giúp phân chia nhiệm vụ trong dự án hiệu quả hơn?
+A. Giảm số lượng thành viên tham gia
+*B. Phân tích yêu cầu và chia nhỏ công việc hợp lý
+C. Sử dụng công cụ kiểm thử để xác định nhiệm vụ
+D. Chọn các nhiệm vụ đơn giản và dễ thực hiện.
+
+Câu 20: Giai đoạn kiểm thử phần mềm nhằm mục đích gì?
+*A. Phân tích chi phí và rủi ro
+B. Tạo tài liệu hướng dẫn sử dụng
+C. Đảm bảo phần mềm hoạt động đúng như yêu cầu
+D. Tăng tính sáng tạo trong thiết kế
+
+Câu 21: Khi lập báo cáo cuối dự án, quản lý dự án cần làm gì để thuyết phục khách hàng?
+A. So sánh thành công dự án hiện tại với các dự án khác trong cùng lĩnh vực
+B. Tập trung trình bày các thành tựu nổi bật đạt được trong dự án
+*C. Cung cấp đầy đủ dữ liệu chi tiết về tiến độ, chi phí và các kết quả thực tế
+D. Đưa ra những giải thích rõ ràng về các vấn đề đã phát sinh trong quá trình
+
+Câu 22: Kiểm thử phần mềm được thực hiện trong giai đoạn nào của dự án?
+A. Giai đoạn bảo trì và nâng cấp
+*B. Giai đoạn phát triển và triển khai
+C. Giai đoạn phân tích yêu cầu khách hàng
+D. Giai đoạn lập kế hoạch tổng thể
+
+Câu 23: Khi nào cần cập nhật kế hoạch dự án?
+A. Khi nhóm hoàn thành giai đoạn kiểm thử
+B. Khi ngân sách không thay đổi
+C. Khi không có vấn đề nào xảy ra
+*D. Khi các yêu cầu mới được thêm vào
+
+Câu 24: Tại sao cần theo dõi tiến độ dự án trong từng giai đoạn?
+A. Để tối ưu hóa hiệu suất nhóm
+B. Để giảm thời gian bảo trì sản phẩm
+*C. Để phát hiện sớm các vấn đề và điều chỉnh kế hoạch kịp thời
+D. Để tối đa hóa chi phí sử dụng tài nguyên
+
+Câu 25: Tối ưu hóa quy trình triển khai sản phẩm giúp gì cho dự án?
+A. Rút ngắn thời gian thực hiện tiến độ dự án
+*B. Giúp triển khai phần mềm nhanh chóng và hiệu quả hơn
+C. Tăng nhân lực tham gia vào dự án phát triển
+D. Giúp tiết kiệm được chi phí ngân sách tổng thể
+
+Câu 26: Công cụ nào dưới đây thường được dùng để lập kế hoạch?
+*A. Trello hoặc Microsoft Project
+B. GitHub hoặc GitLab
+C. Slack hoặc Discord
+D. Selenium hoặc JMeter
+
+Câu 27:Yếu tố nào quan trọng nhất trong giai đoạn thiết kế phần mềm?
+A. Phân tích ngân sách và lịch trình.
+B. Đánh giá khả năng bảo trì sản phẩm
+C. Kiểm tra hiệu suất và lỗi phần mềm
+*D. Xây dựng mô hình và giao diện chi tiết
+
+Câu 28: Khi nào cần phân tích rủi ro trong dự án?
+*A. Trong giai đoạn lập kế hoạch tổng thể
+B. Trong giai đoạn kiểm thử sản phẩm
+C. Trước khi bắt đầu giai đoạn bảo trì
+D. Sau khi hoàn thành dự án
+
+Câu 29: Khi phát hiện tiến độ dự án bị trễ, người quản lý dự án cần làm gì?
+A. Yêu cầu các thành viên trong nhóm tăng giờ làm việc để bắt kịp tiến độ
+B. Tạm ngừng toàn bộ dự án để xem xét và đánh giá lại kế hoạch
+C. Chuyển các nhiệm vụ chưa hoàn thành sang giai đoạn bảo trì sau này
+*D. Xác định nguyên nhân và thực hiện điều chỉnh lịch trình hợp lý
+`;
+
+    const questions = [];
+    const lines = rawQuestions.trim().split(/\r?\n/).filter(line => line.trim() !== '');
+
+    let currentQuestion = null;
+
+    lines.forEach(line => {
+      const trimmed = line.trim();
+
+      if (/^Câu\s*\d*:/.test(trimmed)) {
+        // New question starts
+        if (currentQuestion) {
+          questions.push(currentQuestion);
+        }
+        currentQuestion = {
+          title: trimmed,
+          options: []
+        };
+      } else if (/^\*?[A-D]\./.test(trimmed)) {
+        // Option line
+        const isCorrect = trimmed.startsWith('*');
+        const cleanText = trimmed.replace(/^\*/, '').trim();
+        currentQuestion.options.push({
+          text: cleanText,
+          isCorrect
+        });
+      }
+    });
+
+    // Push the last question
+    if (currentQuestion) {
+      questions.push(currentQuestion);
+    }
+
+
+    //questions.forEach(q => {
+      //q.options.sort(() => Math.random() - 0.5);
+    //});
+    //questions.sort(() => Math.random() - 0.5);
+
+
+    console.log(questions.length);
+
+
+    const quizContainer = document.getElementById('quiz');
+
+    function showConfetti() {
+      const confetti = document.getElementById('confetti');
+      confetti.innerHTML = '';
+      for (let i = 0; i < 100; i++) {
+        const span = document.createElement('span');
+        span.style.left = Math.random() * 100 + '%';
+        span.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        span.style.animationDelay = (Math.random() * 2) + 's';
+        confetti.appendChild(span);
+      }
+      setTimeout(() => confetti.innerHTML = '', 2500);
+    }
+
+    questions.forEach((q, index) => {
+      const div = document.createElement('div');
+      div.className = 'question';
+      div.innerHTML = `<h5>${q.title}</h5>`;
+
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-outline-primary d-block w-100 text-start my-1';
+        btn.textContent = opt.text;
+        btn.onclick = () => {
+          if (opt.isCorrect) {
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-success', 'correct');
+            Array.from(div.querySelectorAll('button')).forEach(b => b.disabled = true);
+            showConfetti();
+          } else {
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-danger', 'text-decoration-line-through');
+            btn.disabled = true;
+          }
+        };
+        div.appendChild(btn);
+      });
+
+      quizContainer.appendChild(div);
+    });
+  </script>
+</body>
+
+</html>
